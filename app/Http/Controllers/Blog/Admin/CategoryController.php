@@ -5,11 +5,23 @@ namespace App\Http\Controllers\Blog\Admin;
 use App\Http\Requests\BlogCategoryCreateRequest;
 use App\Http\Requests\BlogCategoryUpdateRequest;
 use App\Models\BlogCategory;
+use App\Repositories\BlogCategoryRepository;
 use Illuminate\Http\Request;
 use function Sodium\compare;
 
 class CategoryController extends BaseController
 {
+
+    private $blogCategoryRepository;
+
+    public function __construct()
+    {
+        parent::__construct();
+
+        $this->blogCategoryRepository = app(BlogCategoryRepository::class);
+    }
+
+
     /**
      * Display a listing of the resource.
      *
@@ -17,7 +29,8 @@ class CategoryController extends BaseController
      */
     public function index()
     {
-        $paginator = BlogCategory::paginate(5);
+        //$paginator = BlogCategory::paginate(5);
+        $paginator = $this->blogCategoryRepository->getAllWithPaginate(5);
 
         return view('blog.admin.categories.index',compact('paginator'));
     }
@@ -30,7 +43,7 @@ class CategoryController extends BaseController
     public function create()
     {
         $item = new BlogCategory();
-        $categoryList = BlogCategory::all();
+        $categoryList = $this->blogCategoryRepository->getForComboBox();
 
         return view('blog.admin.categories.edit',
             compact('item','categoryList'));
@@ -63,13 +76,14 @@ class CategoryController extends BaseController
     /**
      * Display the specified resource.
      *
-     * @param  int  $id
+     * @param  int $id
+     * @param BlogCategoryRepository $categoryRepository
      * @return \Illuminate\Http\Response
      */
-    public function edit($id)
+    public function edit($id , BlogCategoryRepository $categoryRepository)
     {
-        $item = BlogCategory::findOrFail($id);
-        $categoryList = BlogCategory::all();
+        $item = $categoryRepository->getEdit($id);
+        $categoryList = $categoryRepository->getForComboBox();
 
         return view('blog.admin.categories.edit',
             compact('item','categoryList'));
